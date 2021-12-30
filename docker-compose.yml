@@ -1,0 +1,55 @@
+version: '3'
+services:
+  postgres-db:
+    image: postgres
+    hostname: postgres-db
+    container_name: db_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: user_post
+      POSTGRES_PASSWORD: userpassword1234
+      POSTGRES_DB: dbpost
+    ports:
+      - '5432:5432'
+    networks:
+      - db_network
+  api_app:
+    hostname: api_app
+    container_name: api_app
+    build:
+      context: ./api
+      dockerfile: ./Dockerfile
+    environment:
+      PORT: 8081
+      DB: "postgres://user_post:userpassword1234@localhost:5432/dbpost"
+      DB_HOST: postgres-db
+      DB_USER: user_post
+      DB_DATABASE: dbpost
+      DB_PASSWORD: userpassword1234
+      DB_PORT: 5432
+    ports:
+      - "8081:8081"
+    depends_on:
+      - postgres-db
+    networks:
+      - db_network
+      - web_network
+  web:
+    hostname: web_app
+    container_name: web_app
+    build:
+      context: ./web
+      dockerfile: /Dockerfile
+    environment:
+      PORT: 8080
+      API_HOST: http://api_app:8081
+    build: ./web
+    ports:
+      - "8080:8080"
+    depends_on:
+      - api_app
+    networks:
+      - web_network
+networks:
+  db_network:
+  web_network:
